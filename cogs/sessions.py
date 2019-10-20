@@ -40,7 +40,7 @@ class Sessions(commands.Cog):
 *Duration:* {elapsed}
 *# Correct:* {correct}
 *# Incorrect:* {incorrect}
-*Total Birds:* {total}
+*Total Fossils:* {total}
 *Accuracy:* {accuracy}%"""
         )
     
@@ -57,8 +57,8 @@ class Sessions(commands.Cog):
     @session.command(
         brief="- Starts session",
         help="""- Starts session.
-        Arguments passed will become the default arguments to b!bird, but can be manually overwritten during use. 
-        These settings can be changed at any time with b!session, and arguments can be passed in any order. 
+        Arguments passed will become the default arguments to f!fossil, but can be manually overwritten during use. 
+        These settings can be changed at any time with f!session, and arguments can be passed in any order. 
         However, having both females and juveniles are not supported.""",
         aliases=["st"],
         usage=""
@@ -72,7 +72,7 @@ class Sessions(commands.Cog):
         
         if database.exists(f"session.data:{str(ctx.author.id)}"):
             logger.info("already session")
-            await ctx.send("**There is already a session running.** *Change settings/view stats with `b!session`*")
+            await ctx.send("**There is already a session running.** *Change settings/view stats with `f!session`*")
             return
         else:
             database.hmset(
@@ -84,7 +84,7 @@ class Sessions(commands.Cog):
                     "total": 0
                 }
             )
-            await ctx.send("**Session started**")
+            await ctx.send("**Session started. Your stats are now being tracked**")
     
     # views session
     @session.command(
@@ -104,7 +104,7 @@ class Sessions(commands.Cog):
         if database.exists(f"session.data:{str(ctx.author.id)}"):
             await self._send_stats(ctx)
         else:
-            await ctx.send("**There is no session running.** *You can start one with `b!start`*")
+            await ctx.send("**There is no session running.** *You can start one with `f!start`*")
     
     # stops session
     @session.command(help="- Stops session", aliases=["stp"])
@@ -121,7 +121,7 @@ class Sessions(commands.Cog):
             await self._send_stats(ctx, "**Session stopped.**\n**Session Options:**\n")
             database.delete(f"session.data:{str(ctx.author.id)}")
         else:
-            await ctx.send("**There is no session running.** *You can start one with `b!start`*")
+            await ctx.send("**There is no session running.** *You can start one with `f!start`*")
 
 def setup(bot):
     bot.add_cog(Sessions(bot))

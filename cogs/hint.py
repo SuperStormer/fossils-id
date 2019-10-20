@@ -24,7 +24,7 @@ class Hint(commands.Cog):
         self.bot = bot
     
     # give hint
-    @commands.command(help="- Gives first letter of current bird", aliases=["h"])
+    @commands.command(help="- Gives first letter of current fossil", aliases=["h"])
     @commands.cooldown(1, 3.0, type=commands.BucketType.channel)
     async def hint(self, ctx):
         logger.info("command: hint")
@@ -32,11 +32,11 @@ class Hint(commands.Cog):
         await channel_setup(ctx)
         await user_setup(ctx)
         
-        currentBird = str(database.hget(f"channel:{str(ctx.channel.id)}", "bird"))[2:-1]
-        if currentBird != "":  # check if there is bird
-            await ctx.send(f"The first letter is {currentBird[0]}")
+        current_fossil = str(database.hget(f"channel:{str(ctx.channel.id)}", "fossil"))[2:-1]
+        if current_fossil != "":
+            await ctx.send(f"The first letter is {current_fossil[0]}")
         else:
-            await ctx.send("You need to ask for a bird first!")
+            await ctx.send("You need to ask for a fossil first!")
 
 def setup(bot):
     bot.add_cog(Hint(bot))

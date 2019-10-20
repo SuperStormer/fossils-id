@@ -27,21 +27,14 @@ import redis
 import wikipedia
 from discord.ext import commands, tasks
 
-from data.data import database, logger
+from data.data import database, logger, bot_name
 from functions import channel_setup, precache
 
 BACKUPS_CHANNEL = 622547928946311188
 
-def start_precache():
-    asyncio.run(precache())
-
 if __name__ == '__main__':
     # Initialize bot
-    bot = commands.Bot(
-        command_prefix=['b!', 'b.', 'b#', 'B!', 'B.', 'B#', 'o>', 'O>'],
-        case_insensitive=True,
-        description="BirdID - Your Very Own Ornithologist"
-    )
+    bot = commands.Bot(command_prefix=['f!', 'f.', 'f#'], case_insensitive=True, description=bot_name)
     
     @bot.event
     async def on_ready():
@@ -50,13 +43,11 @@ if __name__ == '__main__':
         logger.info(bot.user.name)
         logger.info(bot.user.id)
         # Change discord activity
-        await bot.change_presence(activity=discord.Activity(type=3, name="birds"))
+        await bot.change_presence(activity=discord.Activity(type=3, name="f!help"))
         
         #refresh_cache.start()
     
-    # Here we load our extensions(cogs) that are located in the cogs directory
-    initial_extensions = ['cogs.get_birds', 'cogs.check', 'cogs.skip', 'cogs.hint', 'cogs.score', 'cogs.sessions', 'cogs.other']
-    for extension in initial_extensions:
+    for extension in ('cogs.get_fossils', 'cogs.check', 'cogs.skip', 'cogs.hint', 'cogs.score', 'cogs.sessions', 'cogs.other'):
         try:
             bot.load_extension(extension)
         except (discord.ClientException, ModuleNotFoundError):
@@ -100,7 +91,6 @@ if __name__ == '__main__':
     @bot.event
     async def on_command_error(ctx, error):
         logger.error("Error: " + str(error))
-        
         # don't handle errors with local handlers
         if hasattr(ctx.command, 'on_error'):
             return
@@ -183,7 +173,7 @@ if __name__ == '__main__':
 *Please log this message in #support in the support server below, or try again.*
 **Error:**  """ + str(error)
             )
-            await ctx.send("https://discord.gg/fXxYyDJ")
+            await ctx.send("https://discord.gg/husFeGG")
             raise error
     
     @tasks.loop(hours=48.0)
@@ -194,15 +184,9 @@ if __name__ == '__main__':
             logger.info("Cleared image cache.")
         except FileNotFoundError:
             logger.info("Already cleared image cache.")
-        
-        try:
-            shutil.rmtree(r'cache/songs/', ignore_errors=True)
-            logger.info("Cleared songs cache.")
-        except FileNotFoundError:
-            logger.info("Already cleared songs cache.")
         event_loop = asyncio.get_event_loop()
         with concurrent.futures.ThreadPoolExecutor(1) as executor:
-            await event_loop.run_in_executor(executor, start_precache)
+            await event_loop.run_in_executor(executor, precache)
     
     # Actually run the bot
     token = os.getenv("token")

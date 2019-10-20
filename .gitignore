@@ -3,4 +3,6 @@
 __pycache__
 main.bat
 logs
-cache
+cache/*
+.vscode
+dump.rdb

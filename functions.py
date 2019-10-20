@@ -14,31 +14,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
-import contextlib
 import difflib
 import os
 import string
-import urllib.parse
-from functools import partial
-from io import BytesIO
-from mimetypes import guess_all_extensions, guess_extension
 
-import aiohttp
 import discord
 from google_images_download import google_images_download
 
-from data.data import (GenericError, database, logger, fossils_list)
+from data.data import GenericError, database, fossils_list, logger
 
 google_images = google_images_download.googleimagesdownload()
-TAXON_CODE_URL = "https://search.macaulaylibrary.org/api/v1/find/taxon?q={}"
-CATALOG_URL = (
-    "https://search.macaulaylibrary.org/catalog.json?searchField=species" +
-    "&taxonCode={}&count={}&mediaType={}&sex={}&age={}&behavior={}&qua=3,4,5"
-)
-SCINAME_URL = "https://api.ebird.org/v2/ref/taxonomy/ebird?fmt=json&species={}"
-COUNT = 20  # set this to include a margin of error in case some urls throw error code 476 due to still being processed
-
 # Valid file types
 valid_image_extensions = {"jpg", "png", "jpeg", "gif"}
 valid_audio_extensions = {"mp3"}
@@ -49,20 +34,7 @@ async def channel_setup(ctx):
     if database.exists(f"channel:{str(ctx.channel.id)}"):
         logger.info("channel data ok")
     else:
-        database.hmset(
-            f"channel:{str(ctx.channel.id)}", {
-                "bird": "",
-                "answered": 1,
-                "sBird": "",
-                "sAnswered": 1,
-                "goatsucker": "",
-                "gsAnswered": 1,
-                "prevJ": 20,
-                "prevB": "",
-                "prevS": "",
-                "prevK": 20
-            }
-        )
+        database.hmset(f"channel:{str(ctx.channel.id)}", {"fossil": "", "answered": 1, "prevJ": 20, "prevB": ""})
         # true = 1, false = 0, index 0 is last arg, prevJ is 20 to define as integer
         logger.info("channel data added")
         await ctx.send("Ok, setup! I'm all ready to use!")
@@ -99,108 +71,36 @@ async def user_setup(ctx):
     else:
         logger.info("dm context")
 
-# sets up new birds
-async def bird_setup(ctx, bird):
-    logger.info("checking bird data")
-    if database.zscore("incorrect:global", string.capwords(str(bird))) is not None:
-        logger.info("bird global ok")
+# sets up new fossils
+async def fossil_setup(ctx, fossil):
+    logger.info("checking fossil data")
+    if database.zscore("incorrect:global", string.capwords(str(fossil))) is not None:
+        logger.info("fossil global ok")
     else:
-        database.zadd("incorrect:global", {string.capwords(str(bird)): 0})
-        logger.info("bird global added")
+        database.zadd("incorrect:global", {string.capwords(str(fossil)): 0})
+        logger.info("fossil global added")
     
-    if database.zscore(f"incorrect.user:{ctx.author.id}", string.capwords(str(bird))) is not None:
-        logger.info("bird user ok")
+    if database.zscore(f"incorrect.user:{ctx.author.id}", string.capwords(str(fossil))) is not None:
+        logger.info("fossil user ok")
     else:
-        database.zadd(f"incorrect.user:{ctx.author.id}", {string.capwords(str(bird)): 0})
-        logger.info("bird user added")
+        database.zadd(f"incorrect.user:{ctx.author.id}", {string.capwords(str(fossil)): 0})
+        logger.info("fossil user added")
     
     if ctx.guild is not None:
         logger.info("no dm")
-        if database.zscore(f"incorrect.server:{ctx.guild.id}", string.capwords(str(bird))) is not None:
-            logger.info("bird server ok")
+        if database.zscore(f"incorrect.server:{ctx.guild.id}", string.capwords(str(fossil))) is not None:
+            logger.info("fossil server ok")
         else:
-            database.zadd(f"incorrect.server:{ctx.guild.id}", {string.capwords(str(bird)): 0})
-            logger.info("bird server added")
+            database.zadd(f"incorrect.server:{ctx.guild.id}", {string.capwords(str(fossil)): 0})
+            logger.info("fossil server added")
     else:
         logger.info("dm context")
 
 # Function to run on error
 def error_skip(ctx):
     logger.info("ok")
-    database.hset(f"channel:{str(ctx.channel.id)}", "bird", "")
+    database.hset(f"channel:{str(ctx.channel.id)}", "fossil", "")
     database.hset(f"channel:{str(ctx.channel.id)}", "answered", "1")
-
-def error_skip_song(ctx):
-    logger.info("ok")
-    database.hset(f"channel:{str(ctx.channel.id)}", "sBird", "")
-    database.hset(f"channel:{str(ctx.channel.id)}", "sAnswered", "1")
-
-def error_skip_goat(ctx):
-    logger.info("ok")
-    database.hset(f"channel:{str(ctx.channel.id)}", "goatsucker", "")
-    database.hset(f"channel:{str(ctx.channel.id)}", "gsAnswered", "1")
-
-# fetch scientific name from common name or taxon code
-async def get_sciname(bird, session=None):
-    logger.info(f"getting sciname for {bird}")
-    async with contextlib.AsyncExitStack() as stack:
-        if session is None:
-            session = await stack.enter_async_context(aiohttp.ClientSession())
-        try:
-            code = await get_taxon(bird, session)
-        except GenericError as e:
-            if e.code == 111:
-                code = bird
-            else:
-                raise
-        
-        sciname_url = SCINAME_URL.format(urllib.parse.quote(code))
-        async with session.get(sciname_url) as sciname_response:
-            if sciname_response.status != 200:
-                raise GenericError(
-                    f"An http error code of {sciname_response.status} occured" + f" while fetching {sciname_url} for {code}",
-                    code=201
-                )
-            sciname_data = await sciname_response.json()
-            try:
-                sciname = sciname_data[0]["sciName"]
-            except IndexError:
-                raise GenericError(f"No sciname found for {code}", code=111)
-    logger.info(f"sciname: {sciname}")
-    return sciname
-
-# fetch taxonomic code from common/scientific name
-async def get_taxon(bird, session=None):
-    logger.info(f"getting taxon code for {bird}")
-    async with contextlib.AsyncExitStack() as stack:
-        if session is None:
-            session = await stack.enter_async_context(aiohttp.ClientSession())
-        taxon_code_url = TAXON_CODE_URL.format(urllib.parse.quote(bird.replace("-", " ").replace("'s", "")))
-        async with session.get(taxon_code_url) as taxon_code_response:
-            if taxon_code_response.status != 200:
-                raise GenericError(
-                    f"An http error code of {taxon_code_response.status} occured" +
-                    f" while fetching {taxon_code_url} for {bird}",
-                    code=201
-                )
-            taxon_code_data = await taxon_code_response.json()
-            try:
-                logger.info(f"raw data: {taxon_code_data}")
-                taxon_code = taxon_code_data[0]["code"]
-                logger.info(f"first item: {taxon_code_data[0]}")
-                if len(taxon_code_data) > 1:
-                    logger.info("entering check")
-                    for item in taxon_code_data:
-                        logger.info(f"checking: {item}")
-                        if spellcheck(item["name"].split(" - ")[0], bird, 6) or spellcheck(item["name"].split(" - ")[1], bird, 6):
-                            logger.info("ok")
-                            taxon_code = item["code"]
-                            break
-                        logger.info("fail")
-            except IndexError:
-                raise GenericError(f"No taxon code found for {bird}", code=111)
-    logger.info(f"taxon code: {taxon_code}")
-    return taxon_code
 
 def session_increment(ctx, item, amount):
     logger.info(f"incrementing {item} by {amount}")
@@ -208,13 +108,13 @@ def session_increment(ctx, item, amount):
     value += int(amount)
     database.hset(f"session.data:{ctx.author.id}", item, str(value))
 
-def incorrect_increment(ctx, bird, amount):
-    logger.info(f"incrementing incorrect {bird} by {amount}")
-    database.zincrby("incorrect:global", amount, str(bird))
-    database.zincrby(f"incorrect.user:{ctx.author.id}", amount, str(bird))
+def incorrect_increment(ctx, fossil, amount):
+    logger.info(f"incrementing incorrect {fossil} by {amount}")
+    database.zincrby("incorrect:global", amount, str(fossil))
+    database.zincrby(f"incorrect.user:{ctx.author.id}", amount, str(fossil))
     if ctx.guild is not None:
         logger.info("no dm")
-        database.zincrby(f"incorrect.server:{ctx.guild.id}", amount, str(bird))
+        database.zincrby(f"incorrect.server:{ctx.guild.id}", amount, str(fossil))
     else:
         logger.info("dm context")
 
@@ -232,15 +132,15 @@ def owner_check(ctx):
     owners = set(str(os.getenv("ids")).split(","))
     return str(ctx.message.author.id) in owners
 
-# Gets a bird picture and sends it to user:
+# Gets a fossil picture and sends it to user:
 # ctx - context for message (discord thing)
-# bird - bird picture to send (str)
+# fossil - fossil picture to send (str)
 # on_error - function to run when an error occurs (function)
-# message - text message to send before bird picture (str)
-async def send_bird(ctx, bird, on_error=None, message=None):
-    if bird == "":
-        logger.error("error - bird is blank")
-        await ctx.send("**There was an error fetching birds.**\n*Please try again.*")
+# message - text message to send before fossil picture (str)
+async def send_fossil(ctx, fossil, on_error=None, message=None):
+    if fossil == "":
+        logger.error("error - fossil is blank")
+        await ctx.send("**There was an error fetching fossils.**\n*Please try again.*")
         if on_error is not None:
             on_error(ctx)
         return
@@ -250,8 +150,9 @@ async def send_bird(ctx, bird, on_error=None, message=None):
     await ctx.trigger_typing()
     
     try:
-        response = await get_image(ctx, bird)
+        response = await get_image(ctx, fossil)
     except GenericError as e:
+        logger.exception(e)
         await delete.delete()
         await ctx.send(f"**An error has occurred while fetching images.**\n*Please try again.*\n**Reason:** {str(e)}")
         if on_error is not None:
@@ -269,15 +170,15 @@ async def send_bird(ctx, bird, on_error=None, message=None):
             await ctx.send(message)
         
         # change filename to avoid spoilers
-        file_obj = discord.File(filename, filename=f"bird.{extension}")
+        file_obj = discord.File(filename, filename=f"fossil.{extension}")
         await ctx.send(file=file_obj)
         await delete.delete()
 
-# Function that gets bird images to run in pool (blocking prevention)
+# Function that gets fossil images to run in pool (blocking prevention)
 # Chooses one image to send
-async def get_image(ctx, bird):
-    # fetch scientific names of birds
-    images = await get_files(bird, "images")
+async def get_image(ctx, fossil):
+    # fetch scientific names of fossils
+    images = await get_files(fossil, "images")
     logger.info("images: " + str(images))
     prevJ = int(str(database.hget(f"channel:{str(ctx.channel.id)}", "prevJ"))[2:-1])
     # Randomize start (choose beginning 4/5ths in case it fails checks)
@@ -306,8 +207,8 @@ async def get_image(ctx, bird):
     return [image_link, extension]
 
 # Manages cache
-async def get_files(sciBird, media_type):
-    directory = f"cache/{media_type}/{sciBird}/"
+async def get_files(fossil, media_type):
+    directory = f"cache/{media_type}/{fossil}/"
     try:
         logger.info("trying")
         files_dir = os.listdir(directory)
@@ -318,8 +219,8 @@ async def get_files(sciBird, media_type):
     except (FileNotFoundError, GenericError):
         logger.info("fetching files")
         # if not found, fetch images
-        logger.info("scibird: " + str(sciBird))
-        paths = fetch_images(sciBird)
+        logger.info("fossil: " + str(fossil))
+        paths = fetch_images(fossil)
         print("paths: " + str(paths))
         paths = paths[0]
         images = [paths[i] for i in sorted(paths.keys())]
@@ -328,29 +229,18 @@ async def get_files(sciBird, media_type):
         return images
 
 def fetch_images(name):
-    directory = f"cache/images/{name}/"
-    return google_images.download({"keywords": name, "limit": 15, "output_directory": directory})
+    directory = f"cache/images/"
+    if name.lower() == "acer":
+        name = "acer fossil"
+    return google_images.download({"keywords": f"{name}", "limit": 15, "output_directory": directory})
 
-#FIXME
-async def precache():
-    pass
+def precache():
+    logger.info("Starting caching")
+    for fossil in fossils_list:
+        fetch_images(fossil)
+    logger.info("Finished caching")
 
-"""
-    timeout = aiohttp.ClientTimeout(total=10 * 60)
-    conn = aiohttp.TCPConnector(limit=100)
-    async with aiohttp.ClientSession(connector=conn, timeout=timeout) as session:
-        logger.info("Starting cache")
-        await asyncio.gather(*(download_media(bird, "images", session=session) for bird in fossils_list))
-        logger.info("Starting females")
-        await asyncio.gather(*(download_media(bird, "images", addOn="female", session=session) for bird in fossils_list))
-        logger.info("Starting juveniles")
-        await asyncio.gather(*(download_media(bird, "images", addOn="juvenile", session=session) for bird in fossils_list))
-        logger.info("Starting songs")
-        await asyncio.gather(*(download_media(bird, "songs", session=session) for bird in sciSongBirdsMaster))
-    logger.info("Images Cached")
-"""
-
-# spellcheck - allows one letter off/extra
+# spellcheck - allows one letter off/extra 
 # cutoff - allows for difference of that amount
 def spellcheck(worda, wordb, cutoff=3):
     worda = worda.lower().replace("-", " ").replace("'", "")

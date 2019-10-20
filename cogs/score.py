@@ -17,7 +17,7 @@
 import typing
 import discord
 from discord.ext import commands
-from data.data import database, logger
+from data.data import database, logger, bot_name
 from functions import channel_setup, user_setup
 
 class Score(commands.Cog):
@@ -35,7 +35,7 @@ class Score(commands.Cog):
         
         totalCorrect = int(database.zscore("score:global", str(ctx.channel.id)))
         await ctx.send(
-            f"Wow, looks like a total of {str(totalCorrect)} birds have been answered correctly in this channel! " +
+            f"Wow, looks like a total of {str(totalCorrect)} fossils have been answered correctly in this channel! " +
             "Good job everyone!"
         )
     
@@ -75,7 +75,7 @@ class Score(commands.Cog):
                 return
         
         embed = discord.Embed(type="rich", colour=discord.Color.blurple())
-        embed.set_author(name="Bird ID - An Ornithology Bot")
+        embed.set_author(name=bot_name)
         embed.add_field(name="User Score:", value=f"{user} has answered correctly {times} times.")
         await ctx.send(embed=embed)
     
@@ -138,7 +138,7 @@ class Score(commands.Cog):
         
         leaderboard_list = database.zrevrangebyscore(database_key, "+inf", "-inf", 0, placings, True)
         embed = discord.Embed(type="rich", colour=discord.Color.blurple())
-        embed.set_author(name="Bird ID - An Ornithology Bot")
+        embed.set_author(name=bot_name)
         leaderboard = ""
         
         for i, stats in enumerate(leaderboard_list):
@@ -168,10 +168,10 @@ class Score(commands.Cog):
         
         await ctx.send(embed=embed)
     
-    # missed - returns top 1-10 missed birds
+    # missed - returns top 1-10 missed fossils
     @commands.command(
-        brief="- Top globally incorrect birds",
-        help="- Top globally incorrect birds, argument can be between 1 and 10, default is 5. " +
+        brief="- Top globally incorrect fossils",
+        help="- Top globally incorrect fossils, argument can be between 1 and 10, default is 5. " +
         "Scope is either global, server, or me. (g, s, m)",
         aliases=["m"]
     )
@@ -223,7 +223,7 @@ class Score(commands.Cog):
         
         if database.zcard(database_key) is 0:
             logger.info(f"no users in {database_key}")
-            await ctx.send("There are no birds in the database.")
+            await ctx.send("There are no fossils in the database.")
             return
         
         if placings > database.zcard(database_key):
@@ -231,12 +231,12 @@ class Score(commands.Cog):
         
         leaderboard_list = database.zrevrangebyscore(database_key, "+inf", "-inf", 0, placings, True)
         embed = discord.Embed(type="rich", colour=discord.Color.blurple())
-        embed.set_author(name="Bird ID - An Ornithology Bot")
+        embed.set_author(name=bot_name)
         leaderboard = ""
         
         for i, stats in enumerate(leaderboard_list):
             leaderboard += f"{str(i+1)}. **{str(stats[0])[2:-1]}** - {str(int(stats[1]))}\n"
-        embed.add_field(name=f"Top Missed Birds ({scope})", value=leaderboard, inline=False)
+        embed.add_field(name=f"Top Missed Fossils ({scope})", value=leaderboard, inline=False)
         
         await ctx.send(embed=embed)
     
@@ -280,7 +280,7 @@ class Score(commands.Cog):
             )
         else:
             await ctx.send(
-                """**An uncaught missed birds error has occurred.**
+                """**An uncaught missed fossils error has occurred.**
 *Please log this message in #support in the support server below, or try again.* 
 **Error:** """ + str(error)
             )

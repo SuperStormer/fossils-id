@@ -29,14 +29,12 @@ database = redis.from_url(os.getenv("REDIS_URL"))
 # Database Format Definitions
 
 # prevJ - makes sure it sends a diff image
-# prevB - makes sure it sends a diff bird (img)
-# prevS - makes sure it sends a diff bird (sounds)
+# prevB - makes sure it sends a diff fossil (img)
+# prevS - makes sure it sends a diff fossil (sounds)
 # prevK - makes sure it sends a diff sound
 
 # server format = {
-# channel:channel_id : { "bird", "answered", "sBird", "sAnswered",
-#                     "goatsucker", "gsAnswered",
-#                     "prevJ", "prevB", "prevS", "prevK" }
+# channel:channel_id : { "fossil", "answered","prevJ", "prevB"}
 # }
 
 # session format:
@@ -48,10 +46,10 @@ database = redis.from_url(os.getenv("REDIS_URL"))
 #    "users.server:server_id":[user id, # of correct]
 # }
 
-# incorrect birds format = {
-#    "incorrect:global":[bird name, # incorrect]
-#    "incorrect.server:server_id":[bird name, # incorrect]
-#    "incorrect.user:user_id:":[bird name, # incorrect]
+# incorrect fossil format = {
+#    "incorrect:global":[name, # incorrect]
+#    "incorrect.server:server_id":[name, # incorrect]
+#    "incorrect.user:user_id:":[name, # incorrect]
 # }
 
 # channel score format = {
@@ -59,21 +57,20 @@ database = redis.from_url(os.getenv("REDIS_URL"))
 # }
 
 # setup logging
-logger = logging.getLogger("bird-id")
+logger = logging.getLogger("fossil-id")
 logger.setLevel(logging.DEBUG)
 os.makedirs("logs", exist_ok=True)
 
 file_handler = logging.handlers.TimedRotatingFileHandler("logs/log.txt", backupCount=4, when="midnight")
 file_handler.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.WARNING)
+stream_handler.setLevel(logging.ERROR)
 
 file_handler.setFormatter(logging.Formatter("{asctime} - {filename:10} -  {levelname:8} - {message}", style="{"))
 stream_handler.setFormatter(logging.Formatter("{filename:10} -  {levelname:8} - {message}", style="{"))
 
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
-
 # log uncaught exceptions
 
 def handle_exception(exc_type, exc_value, exc_traceback):
@@ -84,6 +81,8 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     logger.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
 sys.excepthook = handle_exception
+
+bot_name = "Fossils ID - A Paleontology Bot"
 
 class GenericError(commands.CommandError):
     def __init__(self, message=None, code=0):
@@ -99,6 +98,6 @@ class GenericError(commands.CommandError):
 
 def _fossils_list():
     with open("data/fossils_list.txt") as f:
-        return [string.capwords(line.strip().replace("-", " ")) for line in f]
+        return [string.capwords(line.strip()) for line in f]
 
 fossils_list = _fossils_list()

@@ -21,15 +21,15 @@ import discord
 import wikipedia
 from discord.ext import commands
 
-from data.data import (fossils_list, database, logger)
-from functions import (channel_setup, get_sciname, send_bird, user_setup, owner_check)
+from data.data import fossils_list, database, logger, bot_name
+from functions import channel_setup, send_fossil, user_setup, owner_check
 
 class Other(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    # Info - Gives call+image of 1 bird
-    @commands.command(help="- Gives an image and call of a bird", aliases=['i'])
+    # Info - Gives call+image of 1 fossil
+    @commands.command(help="- Gives an image and call of a fossil", aliases=['i'])
     @commands.cooldown(1, 10.0, type=commands.BucketType.channel)
     async def info(self, ctx, *, arg):
         logger.info("command: info")
@@ -39,14 +39,14 @@ class Other(commands.Cog):
         
         matches = get_close_matches(arg, fossils_list + fossils_list, n=1)
         if matches:
-            bird = matches[0]
+            fossil = matches[0]
             
             delete = await ctx.send("Please wait a moment.")
-            await send_bird(ctx, str(bird), message="Here's the image!")
+            await send_fossil(ctx, str(fossil), message="Here's the image!")
             await delete.delete()
         
         else:
-            await ctx.send("Bird not found. Are you sure it's on the list?")
+            await ctx.send("Fossil not found. Are you sure it's on the list?")
     
     # Wiki command - argument is the wiki page
     @commands.command(help="- Fetch the wikipedia page for any given argument")
@@ -75,11 +75,11 @@ class Other(commands.Cog):
         await user_setup(ctx)
         
         embed = discord.Embed(type="rich", colour=discord.Color.blurple())
-        embed.set_author(name="Bird ID - An Ornithology Bot")
+        embed.set_author(name=bot_name)
         embed.add_field(
             name="Bot Info",
-            value="This bot was created by EraserBird and person_v1.32 " +
-            "for helping people practice bird identification for Science Olympiad.",
+            value="This bot was created by EraserBird, person_v1.32 and hmmm" +
+            "for helping people practice fossil identification for Science Olympiad.",
             inline=False
         )
         embed.add_field(
@@ -108,7 +108,7 @@ class Other(commands.Cog):
         await user_setup(ctx)
         
         embed = discord.Embed(type="rich", colour=discord.Color.blurple())
-        embed.set_author(name="Bird ID - An Ornithology Bot")
+        embed.set_author(name=bot_name)
         embed.add_field(
             name="Invite",
             value="""To invite this bot to your own server, use the following invite link:
@@ -129,13 +129,6 @@ https://discordapp.com/api/oauth2/authorize?client_id=635564806962675732&permiss
         channel = self.bot.get_channel(channel_id)
         await channel.send(message)
         await ctx.send("Ok, sent!")
-    
-    # Test command - for testing purposes only
-    @commands.command(help="- test command", hidden=True)
-    async def test(self, ctx, *, bird):
-        logger.info("command: test")
-        sciname = await get_sciname(bird)
-        await ctx.send(sciname)
 
 def setup(bot):
     bot.add_cog(Other(bot))
