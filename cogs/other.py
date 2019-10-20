@@ -21,43 +21,42 @@ import discord
 import wikipedia
 from discord.ext import commands
 
-from data.data import (birdListMaster, database, logger, memeList, sciBirdListMaster)
-from functions import (channel_setup, get_sciname, send_bird, send_birdsong, user_setup, owner_check)
+from data.data import (fossils_list, database, logger)
+from functions import (channel_setup, get_sciname, send_bird, user_setup, owner_check)
 
 class Other(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+    
     # Info - Gives call+image of 1 bird
     @commands.command(help="- Gives an image and call of a bird", aliases=['i'])
     @commands.cooldown(1, 10.0, type=commands.BucketType.channel)
     async def info(self, ctx, *, arg):
         logger.info("command: info")
-
+        
         await channel_setup(ctx)
         await user_setup(ctx)
-
-        matches = get_close_matches(arg, birdListMaster + sciBirdListMaster, n=1)
+        
+        matches = get_close_matches(arg, fossils_list + fossils_list, n=1)
         if matches:
             bird = matches[0]
-
+            
             delete = await ctx.send("Please wait a moment.")
             await send_bird(ctx, str(bird), message="Here's the image!")
-            await send_birdsong(ctx, str(bird), message="Here's the call!")
             await delete.delete()
-
+        
         else:
             await ctx.send("Bird not found. Are you sure it's on the list?")
-
+    
     # Wiki command - argument is the wiki page
     @commands.command(help="- Fetch the wikipedia page for any given argument")
     @commands.cooldown(1, 8.0, type=commands.BucketType.channel)
     async def wiki(self, ctx, *, arg):
         logger.info("command: wiki")
-
+        
         await channel_setup(ctx)
         await user_setup(ctx)
-
+        
         try:
             page = wikipedia.page(arg)
             await ctx.send(page.url)
@@ -65,28 +64,16 @@ class Other(commands.Cog):
             await ctx.send("Sorry, that page was not found. Try being more specific.")
         except wikipedia.exceptions.PageError:
             await ctx.send("Sorry, that page was not found.")
-
-    # meme command - sends a random bird video/gif
-    @commands.command(help="- Sends a funny bird video!")
-    @commands.cooldown(1, 300.0, type=commands.BucketType.channel)
-    async def meme(self, ctx):
-        logger.info("command: meme")
-
-        await channel_setup(ctx)
-        await user_setup(ctx)
-        await ctx.send(random.choice(memeList))
-
+    
     # bot info command - gives info on bot
-    @commands.command(
-        help="- Gives info on bot, support server invite, stats", aliases=["bot_info", "support", "stats"]
-    )
+    @commands.command(help="- Gives info on bot, support server invite, stats", aliases=["bot_info", "support", "stats"])
     @commands.cooldown(1, 5.0, type=commands.BucketType.channel)
     async def botinfo(self, ctx):
         logger.info("command: botinfo")
-
+        
         await channel_setup(ctx)
         await user_setup(ctx)
-
+        
         embed = discord.Embed(type="rich", colour=discord.Color.blurple())
         embed.set_author(name="Bird ID - An Ornithology Bot")
         embed.add_field(
@@ -110,29 +97,27 @@ class Other(commands.Cog):
         )
         await ctx.send(embed=embed)
         await ctx.send("https://discord.gg/fXxYyDJ")
-
+    
     # invite command - sends invite link
     @commands.command(help="- Get the invite link for this bot")
     @commands.cooldown(1, 5.0, type=commands.BucketType.channel)
     async def invite(self, ctx):
         logger.info("command: invite")
-
+        
         await channel_setup(ctx)
         await user_setup(ctx)
-
+        
         embed = discord.Embed(type="rich", colour=discord.Color.blurple())
         embed.set_author(name="Bird ID - An Ornithology Bot")
         embed.add_field(
             name="Invite",
-            value="""To invite this bot to your own server, use the following invite links.\n
-**Bird-ID:** https://discordapp.com/api/oauth2/authorize?client_id=601917808137338900&permissions=268486656&scope=bot\n
-**Orni-Bot:** https://discordapp.com/api/oauth2/authorize?client_id=601755752410906644&permissions=268486656&scope=bot\n
-Unfotunately, Orni-Bot is currently unavaliable. For more information, visit our support server below.""",
+            value="""To invite this bot to your own server, use the following invite link:
+https://discordapp.com/api/oauth2/authorize?client_id=635564806962675732&permissions=0&scope=bot""",
             inline=False
         )
         await ctx.send(embed=embed)
         await ctx.send("https://discord.gg/fXxYyDJ")
-
+    
     # Send command - for testing purposes only
     @commands.command(help="- send command", hidden=True, aliases=["sendas"])
     @commands.check(owner_check)
@@ -144,7 +129,7 @@ Unfotunately, Orni-Bot is currently unavaliable. For more information, visit our
         channel = self.bot.get_channel(channel_id)
         await channel.send(message)
         await ctx.send("Ok, sent!")
-
+    
     # Test command - for testing purposes only
     @commands.command(help="- test command", hidden=True)
     async def test(self, ctx, *, bird):
