@@ -1,7 +1,5 @@
 # Fossil ID
 
-[![Discord Invite](https://discordapp.com/api/guilds/601913706288381952/embed.png)](https://discord.gg/husFeGG)
-
 A discord bot for aspiring paleontologists. This bot is designed to help people practice the identification portion of the Science Olympiad Fossils event.
 
 ## Usage
