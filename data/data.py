@@ -64,7 +64,7 @@ os.makedirs("logs", exist_ok=True)
 file_handler = logging.handlers.TimedRotatingFileHandler("logs/log.txt", backupCount=4, when="midnight")
 file_handler.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.ERROR)
+stream_handler.setLevel(logging.DEBUG)
 
 file_handler.setFormatter(logging.Formatter("{asctime} - {filename:10} -  {levelname:8} - {message}", style="{"))
 stream_handler.setFormatter(logging.Formatter("{filename:10} -  {levelname:8} - {message}", style="{"))
