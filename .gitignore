@@ -1,8 +1,9 @@
 .mypy_cache
 .pytest_cache
 __pycache__
-main.bat
 logs
 cache/*
 .vscode
 dump.rdb
+redis-stable
+main.bat

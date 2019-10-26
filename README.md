@@ -14,6 +14,8 @@ For help with the bot, feature requests, or any other questions, please join our
 
 If you have previous programming experience and would like to help us add features or fix issues, feel free to make a pull request. Our code probably isn't of the highest quality, so we value any suggestions you may have.
 
+After you have cloned the project, you must run setup.sh to build redis-server for your computer. Procfile and runtime.txt is necessary only if you plan on using Heroku to host your bot.
+
 If you find an issue with the bot, please report it in the support server instead of opening a Github issue.
 
 **_Happy Identification!_**
