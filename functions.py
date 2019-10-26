@@ -14,9 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import asyncio
 import difflib
 import os
 import string
+import sys
+from concurrent.futures import ThreadPoolExecutor
 
 import discord
 from google_images_download import google_images_download
@@ -232,15 +235,16 @@ def fetch_images(name):
     directory = f"cache/images/"
     if name.lower() == "acer":
         name = "acer fossil"
-    return google_images.download({"keywords": f"{name}", "limit": 15, "output_directory": directory})
+    return google_images.download({"keywords": name, "limit": 15, "silent_mode": True, "output_directory": directory})
 
-def precache():
+async def precache():
     logger.info("Starting caching")
-    for fossil in fossils_list:
-        fetch_images(fossil)
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        await asyncio.gather(*(loop.run_in_executor(executor, fetch_images, fossil) for fossil in fossils_list))
     logger.info("Finished caching")
 
-# spellcheck - allows one letter off/extra 
+# spellcheck - allows one letter off/extra
 # cutoff - allows for difference of that amount
 def spellcheck(worda, wordb, cutoff=3):
     worda = worda.lower().replace("-", " ").replace("'", "")

@@ -46,7 +46,7 @@ class Check(commands.Cog):
             await fossil_setup(ctx, current_fossil)
             database.hset(f"channel:{str(ctx.channel.id)}", "fossil", "")
             database.hset(f"channel:{str(ctx.channel.id)}", "answered", "1")
-            if spellcheck(guess.split(" ")[:-1], current_fossil.split(" ")[:-1]):
+            if spellcheck(guess.split(" ")[-1], current_fossil.split(" ")[-1]):
                 logger.info("correct")
                 
                 if database.exists(f"session.data:{ctx.author.id}"):
