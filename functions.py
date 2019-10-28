@@ -15,18 +15,18 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import asyncio
+import contextlib
 import difflib
 import os
 import string
-import sys
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
+import aiohttp
 import discord
-from google_images_download import google_images_download
 
 from data.data import GenericError, database, fossils_list, logger
+from google_images import download_images
 
-google_images = google_images_download.googleimagesdownload()
 # Valid file types
 valid_image_extensions = {"jpg", "png", "jpeg", "gif"}
 valid_audio_extensions = {"mp3"}
@@ -231,17 +231,22 @@ async def get_files(fossil, media_type):
         print("images: " + str(images))
         return images
 
-def fetch_images(name):
-    directory = f"cache/images/"
-    if name.lower() == "acer":
-        name = "acer fossil"
-    return google_images.download({"keywords": name, "limit": 15, "silent_mode": True, "output_directory": directory})
+async def fetch_images(name, session=None, executor=None):
+    async with contextlib.AsyncExitStack() as stack:
+        if session is None:
+            session = await stack.enter_async_context(aiohttp.ClientSession())
+        if executor is None:
+            executor = stack.enter_context(ProcessPoolExecutor(max_workers=1))
+        directory = f"cache/images/"
+        if name.lower() == "acer":
+            name = "acer fossil"
+        return await download_images(directory, name, session=session, executor=executor)
 
 async def precache():
     logger.info("Starting caching")
-    loop = asyncio.get_event_loop()
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        await asyncio.gather(*(loop.run_in_executor(executor, fetch_images, fossil) for fossil in fossils_list))
+    with ProcessPoolExecutor(max_workers=4) as executor:
+        async with aiohttp.ClientSession() as session:
+            await asyncio.gather(*(fetch_images(fossil, session, executor) for fossil in fossils_list))
     logger.info("Finished caching")
 
 # spellcheck - allows one letter off/extra

@@ -19,7 +19,6 @@ import errno
 import os
 import shutil
 import sys
-import concurrent.futures
 
 import aiohttp
 import discord
@@ -184,10 +183,8 @@ if __name__ == '__main__':
             logger.info("Cleared image cache.")
         except FileNotFoundError:
             logger.info("Already cleared image cache.")
-        event_loop = asyncio.get_event_loop()
-        with concurrent.futures.ThreadPoolExecutor(1) as executor:
-            await event_loop.run_in_executor(executor, precache)
+        await precache()
     
-    # Actually run the bot
+    refresh_cache.start()
     token = os.getenv("token")
     bot.run(token)

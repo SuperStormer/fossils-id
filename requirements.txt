@@ -3,3 +3,6 @@ wikipedia==1.4.0
 redis==3.3.11
 google-images-download==2.8.0
 flask==1.1.1
+aiofiles==0.4.0
+beautifulsoup4==4.8.1
+lxml==4.4.1
