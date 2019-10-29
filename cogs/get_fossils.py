@@ -34,7 +34,7 @@ class Fossils(commands.Cog):
     # help text
     @commands.command(help='- Sends a random fossil image for you to ID', aliases=["f"], usage="")
     # 5 second cooldown
-    @commands.cooldown(1, 5.0, type=commands.BucketType.channel)
+    @commands.cooldown(1, 3.0, type=commands.BucketType.channel)
     async def fossil(self, ctx):
         logger.info("command: fossil")
         

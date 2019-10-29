@@ -261,7 +261,7 @@ class Score(commands.Cog):
 *Please log this message in #support in the support server below, or try again.* 
 **Error:** """ + str(error)
             )
-            await ctx.send("https://discord.gg/fXxYyDJ")
+            await ctx.send("https://discord.gg/husFeGG")
             raise error
     
     @missed.error
@@ -284,7 +284,7 @@ class Score(commands.Cog):
 *Please log this message in #support in the support server below, or try again.* 
 **Error:** """ + str(error)
             )
-            await ctx.send("https://discord.gg/fXxYyDJ")
+            await ctx.send("https://discord.gg/husFeGG")
             raise error
 
 def setup(bot):
