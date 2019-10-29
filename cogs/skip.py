@@ -24,7 +24,7 @@ class Skip(commands.Cog):
         self.bot = bot
     
     # Skip command - no args
-    @commands.command(help="- Skip the current fossil to get a new one", aliases=["sk"])
+    @commands.command(help="- Skip the current fossil to get a new one", aliases=["sk", "s"])
     @commands.cooldown(1, 5.0, type=commands.BucketType.channel)
     async def skip(self, ctx):
         logger.info("command: skip")

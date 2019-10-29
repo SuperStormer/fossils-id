@@ -54,17 +54,9 @@ class Sessions(commands.Cog):
             await ctx.send('**Invalid subcommand passed.**\n*Valid Subcommands:* `start, view, stop`')
     
     # starts session
-    @session.command(
-        brief="- Starts session",
-        help="""- Starts session.
-        Arguments passed will become the default arguments to f!fossil, but can be manually overwritten during use. 
-        These settings can be changed at any time with f!session, and arguments can be passed in any order. 
-        However, having both females and juveniles are not supported.""",
-        aliases=["st"],
-        usage=""
-    )
+    @session.command(help="- Starts session", aliases=["st"], usage="")
     @commands.cooldown(1, 3.0, type=commands.BucketType.channel)
-    async def start(self, ctx, *, args_str: str = ""):
+    async def start(self, ctx):
         logger.info("command: start session")
         
         await channel_setup(ctx)
@@ -72,7 +64,7 @@ class Sessions(commands.Cog):
         
         if database.exists(f"session.data:{str(ctx.author.id)}"):
             logger.info("already session")
-            await ctx.send("**There is already a session running.** *Change settings/view stats with `f!session`*")
+            await ctx.send("**There is already a session running.** *View stats with `f!session`*")
             return
         else:
             database.hmset(
@@ -95,7 +87,7 @@ class Sessions(commands.Cog):
         usage=""
     )
     @commands.cooldown(1, 3.0, type=commands.BucketType.channel)
-    async def edit(self, ctx, *, args_str: str = ""):
+    async def view(self, ctx):
         logger.info("command: view session")
         
         await channel_setup(ctx)
@@ -104,7 +96,7 @@ class Sessions(commands.Cog):
         if database.exists(f"session.data:{str(ctx.author.id)}"):
             await self._send_stats(ctx)
         else:
-            await ctx.send("**There is no session running.** *You can start one with `f!start`*")
+            await ctx.send("**There is no session running.** *You can start one with `f!session start`*")
     
     # stops session
     @session.command(help="- Stops session", aliases=["stp"])
@@ -118,10 +110,10 @@ class Sessions(commands.Cog):
         if database.exists(f"session.data:{str(ctx.author.id)}"):
             database.hset(f"session.data:{str(ctx.author.id)}", "stop", round(time.time()))
             
-            await self._send_stats(ctx, "**Session stopped.**\n**Session Options:**\n")
+            await self._send_stats(ctx)
             database.delete(f"session.data:{str(ctx.author.id)}")
         else:
-            await ctx.send("**There is no session running.** *You can start one with `f!start`*")
+            await ctx.send("**There is no session running.** *You can start one with `f!session start`*")
 
 def setup(bot):
     bot.add_cog(Sessions(bot))

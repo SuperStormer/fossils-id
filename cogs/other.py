@@ -96,7 +96,7 @@ class Other(commands.Cog):
             inline=False
         )
         await ctx.send(embed=embed)
-        await ctx.send("https://discord.gg/fXxYyDJ")
+        await ctx.send("https://discord.gg/husFeGG")
     
     # invite command - sends invite link
     @commands.command(help="- Get the invite link for this bot")
@@ -116,7 +116,7 @@ https://discordapp.com/api/oauth2/authorize?client_id=635564806962675732&permiss
             inline=False
         )
         await ctx.send(embed=embed)
-        await ctx.send("https://discord.gg/fXxYyDJ")
+        await ctx.send("https://discord.gg/husFeGG")
     
     # Send command - for testing purposes only
     @commands.command(help="- send command", hidden=True, aliases=["sendas"])

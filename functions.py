@@ -133,7 +133,7 @@ def score_increment(ctx, amount):
 
 def owner_check(ctx):
     owners = set(str(os.getenv("ids")).split(","))
-    return str(ctx.message.author.id) in owners
+    return str(ctx.author.id) in owners
 
 # Gets a fossil picture and sends it to user:
 # ctx - context for message (discord thing)
@@ -223,13 +223,8 @@ async def get_files(fossil, media_type):
         logger.info("fetching files")
         # if not found, fetch images
         logger.info("fossil: " + str(fossil))
-        paths = fetch_images(fossil)
-        print("paths: " + str(paths))
-        paths = paths[0]
-        images = [paths[i] for i in sorted(paths.keys())]
-        images = images[0]
-        print("images: " + str(images))
-        return images
+        paths = await fetch_images(fossil)
+        return paths
 
 async def fetch_images(name, session=None, executor=None):
     async with contextlib.AsyncExitStack() as stack:
@@ -237,10 +232,10 @@ async def fetch_images(name, session=None, executor=None):
             session = await stack.enter_async_context(aiohttp.ClientSession())
         if executor is None:
             executor = stack.enter_context(ProcessPoolExecutor(max_workers=1))
-        directory = f"cache/images/"
+        directory = f"cache/images"
         if name.lower() == "acer":
             name = "acer fossil"
-        return await download_images(directory, name, session=session, executor=executor)
+        return await download_images(directory, name, session=session, executor=executor, logger=logger)
 
 async def precache():
     logger.info("Starting caching")

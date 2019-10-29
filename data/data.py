@@ -57,14 +57,15 @@ database = redis.from_url(os.getenv("REDIS_URL"))
 # }
 
 # setup logging
-logger = logging.getLogger("fossil-id")
+logger = logging.getLogger("fossils-id")
 logger.setLevel(logging.DEBUG)
+logger.propagate = False
 os.makedirs("logs", exist_ok=True)
 
 file_handler = logging.handlers.TimedRotatingFileHandler("logs/log.txt", backupCount=4, when="midnight")
 file_handler.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.DEBUG)
+stream_handler.setLevel(logging.WARNING)
 
 file_handler.setFormatter(logging.Formatter("{asctime} - {filename:10} -  {levelname:8} - {message}", style="{"))
 stream_handler.setFormatter(logging.Formatter("{filename:10} -  {levelname:8} - {message}", style="{"))

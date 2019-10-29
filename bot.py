@@ -89,7 +89,7 @@ if __name__ == '__main__':
     ######
     @bot.event
     async def on_command_error(ctx, error):
-        logger.error("Error: " + str(error))
+        logger.exception(error)
         # don't handle errors with local handlers
         if hasattr(ctx.command, 'on_error'):
             return
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 *Please log this message in #support in the support server below, or try again.*
 **Error:** """ + str(error)
                     )
-                    await ctx.send("https://discord.gg/fXxYyDJ")
+                    await ctx.send("https://discord.gg/husFeGG")
                 else:
                     await channel_setup(ctx)
                     await ctx.send("Please run that command again.")
@@ -151,7 +151,7 @@ if __name__ == '__main__':
 *Please log this message in #support in the support server below, or try again.*
 **Error:** """ + str(error)
                     )
-                    await ctx.send("https://discord.gg/fXxYyDJ")
+                    await ctx.send("https://discord.gg/husFeGG")
                 else:
                     await ctx.send("**An error has occured with discord. :(**\n*Please try again.*")
             
@@ -162,7 +162,7 @@ if __name__ == '__main__':
 *Please log this message in #support in the support server below, or try again.*
 **Error:**  """ + str(error)
                 )
-                await ctx.send("https://discord.gg/fXxYyDJ")
+                await ctx.send("https://discord.gg/husFeGG")
                 raise error
         
         else:
