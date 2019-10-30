@@ -1,6 +1,7 @@
 from flask import Flask
 from threading import Thread
 import subprocess
+import os
 app = Flask('')
 
 @app.route('/')
@@ -8,7 +9,7 @@ def main():
     return "Bot is alive!"
 
 def run():
-    app.run(host="0.0.0.0", port=2000)
+    app.run(host="0.0.0.0", port=os.getenv("PORT") or 2000)
 
 def keep_alive():
     server = Thread(target=run)
