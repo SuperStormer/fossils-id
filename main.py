@@ -16,5 +16,5 @@ def keep_alive():
 
 if __name__ == '__main__':
     keep_alive()
-    subprocess.Popen(["./redis-stable/src/redis-server", "--port", "3001"])
+    subprocess.Popen(["redis-server", "--port", "3001"])
     subprocess.run(["python", "./bot.py"])
