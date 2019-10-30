@@ -19,6 +19,7 @@ import errno
 import os
 import shutil
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 import aiohttp
 import discord
@@ -175,6 +176,9 @@ if __name__ == '__main__':
             await ctx.send("https://discord.gg/husFeGG")
             raise error
     
+    def start_precache():
+        asyncio.run(precache())
+    
     @tasks.loop(hours=48.0)
     async def refresh_cache():
         logger.info("clear cache")
@@ -183,7 +187,9 @@ if __name__ == '__main__':
             logger.info("Cleared image cache.")
         except FileNotFoundError:
             logger.info("Already cleared image cache.")
-        await precache()
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(executor, start_precache)
     
     refresh_cache.start()
     token = os.getenv("token")

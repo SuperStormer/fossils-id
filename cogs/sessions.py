@@ -83,7 +83,6 @@ class Sessions(commands.Cog):
         brief="- Views session",
         help="- Views session\nSessions will record your activity for an amount of time and " +
         "will give you stats on how your performance. ",
-        aliases=["view"],
         usage=""
     )
     @commands.cooldown(1, 3.0, type=commands.BucketType.channel)
