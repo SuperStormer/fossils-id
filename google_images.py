@@ -42,7 +42,10 @@ async def _download_helper(path, url, session, logger=None):
     logger.info("downloading image at " + url)
     async with session.get(url) as response:
         # from https://stackoverflow.com/questions/29674905/convert-content-type-header-into-file-extension
-        content_type = response.headers['content-type'].partition(';')[0].strip()
+        try:
+            content_type = response.headers['content-type'].partition(';')[0].strip()
+        except KeyError:
+            logger.warning(f"No content-type for {url}; extension cannot be detected.")
         if content_type.partition("/")[0] == "image":
             extensions = guess_all_extensions(content_type)
             try:
@@ -52,7 +55,7 @@ async def _download_helper(path, url, session, logger=None):
                 return
         
         else:
-            logger.warning(f"No extensions found for {url}")
+            logger.warning(f"Invalid content-type {content_type} for {url}")
             return
         
         filename = f"{path}{ext}"
