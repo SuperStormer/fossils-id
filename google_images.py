@@ -15,7 +15,7 @@ HEADERS = {
     "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"
 }
-VALID_IMAGE_EXTENSIONS = {"jpg", "png", "jpeg", "gif"}
+VALID_IMAGE_EXTENSIONS = {"jpg", "png", "jpeg", "gif", "svg"}
 
 def _parse_image_html(text, limit=15):
     only_image_info = SoupStrainer("div")
@@ -40,34 +40,38 @@ async def _download_helper(path, url, session, logger=None):
     if logger is None:
         logger = logging
     logger.info("downloading image at " + url)
-    async with session.get(url) as response:
-        # from https://stackoverflow.com/questions/29674905/convert-content-type-header-into-file-extension
-        try:
-            content_type = response.headers['content-type'].partition(';')[0].strip()
-        except KeyError:
-            logger.warning(f"No content-type for {url}; extension cannot be detected.")
-        if content_type.partition("/")[0] == "image":
-            extensions = guess_all_extensions(content_type)
+    try:
+        async with session.get(url) as response:
+            # from https://stackoverflow.com/questions/29674905/convert-content-type-header-into-file-extension
             try:
-                ext = "." + (set(ext[1:] for ext in extensions).intersection(VALID_IMAGE_EXTENSIONS)).pop()
+                content_type = response.headers['content-type'].partition(';')[0].strip()
             except KeyError:
-                logger.warning(f"No valid extensions found for {url}. Extensions: {extensions}")
+                logger.warning(f"No content-type for {url}; extension cannot be detected.")
                 return
-        
-        else:
-            logger.warning(f"Invalid content-type {content_type} for {url}")
-            return
-        
-        filename = f"{path}{ext}"
-        # from https://stackoverflow.com/questions/38358521/alternative-of-urllib-urlretrieve-in-python-3-5
-        async with aiofiles.open(filename, 'wb') as out_file:
-            block_size = 1024 * 8
-            while True:
-                block = await response.content.read(block_size)  # pylint: disable=no-member
-                if not block:
-                    break
-                await out_file.write(block)
-        return filename
+            if content_type.partition("/")[0] == "image":
+                extensions = guess_all_extensions(content_type)
+                try:
+                    ext = "." + (set(ext[1:] for ext in extensions).intersection(VALID_IMAGE_EXTENSIONS)).pop()
+                except KeyError:
+                    logger.warning(f"No valid extensions found for {url}. Extensions: {extensions}")
+                    return
+            
+            else:
+                logger.warning(f"Invalid content-type {content_type} for {url}")
+                return
+            
+            filename = f"{path}{ext}"
+            # from https://stackoverflow.com/questions/38358521/alternative-of-urllib-urlretrieve-in-python-3-5
+            async with aiofiles.open(filename, 'wb') as out_file:
+                block_size = 1024 * 8
+                while True:
+                    block = await response.content.read(block_size)  # pylint: disable=no-member
+                    if not block:
+                        break
+                    await out_file.write(block)
+            return filename
+    except aiohttp.client_exceptions.ClientConnectionError as e:
+        logger.exception(e)
 
 async def download_images(directory, keyword, limit=15, session=None, executor=None, logger=None):
     if logger is None:
