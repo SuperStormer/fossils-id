@@ -191,6 +191,6 @@ if __name__ == '__main__':
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(executor, start_precache)
     
-    #refresh_cache.start()
+    refresh_cache.start()
     token = os.getenv("token")
     bot.run(token)

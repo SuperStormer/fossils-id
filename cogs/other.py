@@ -112,7 +112,7 @@ class Other(commands.Cog):
         embed.add_field(
             name="Invite",
             value="""To invite this bot to your own server, use the following invite link:
-https://discordapp.com/api/oauth2/authorize?client_id=635564806962675732&permissions=0&scope=bot""",
+https://discordapp.com/api/oauth2/authorize?client_id=639279425631813648&permissions=0&scope=bot""",
             inline=False
         )
         await ctx.send(embed=embed)
