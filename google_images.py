@@ -73,7 +73,7 @@ async def _download_helper(path, url, session, logger=None):
     except aiohttp.client_exceptions.ClientConnectionError as e:
         logger.exception(e)
 
-async def download_images(directory, keyword, limit=15, session=None, executor=None, logger=None):
+async def download_images(directory, keyword, limit=10, session=None, executor=None, logger=None):
     if logger is None:
         logger = logging
     logger.info("fetching images for " + keyword)
