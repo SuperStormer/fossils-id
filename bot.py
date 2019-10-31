@@ -157,7 +157,7 @@ if __name__ == '__main__':
                     await ctx.send("**An error has occured with discord. :(**\n*Please try again.*")
             
             else:
-                logger.error("uncaught command error")
+                logger.exception(error)
                 await ctx.send(
                     """**An uncaught command error has occurred.**
 *Please log this message in #support in the support server below, or try again.*
@@ -191,6 +191,6 @@ if __name__ == '__main__':
             loop = asyncio.get_event_loop()
             await loop.run_in_executor(executor, start_precache)
     
-    refresh_cache.start()
+    #refresh_cache.start()
     token = os.getenv("token")
     bot.run(token)
