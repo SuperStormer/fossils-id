@@ -19,13 +19,14 @@ import contextlib
 import difflib
 import os
 import string
+import pickle
 from concurrent.futures import ProcessPoolExecutor
 
 import aiohttp
 import discord
 
 from data.data import GenericError, database, fossils_list, logger
-from google_images import download_images
+from download_images import download_images
 
 # Valid file types
 valid_image_extensions = {"jpg", "png", "jpeg", "gif"}
@@ -243,6 +244,29 @@ async def precache():
         async with aiohttp.ClientSession() as session:
             await asyncio.gather(*(fetch_images(fossil, session, executor) for fossil in fossils_list))
     logger.info("Finished caching")
+def cleanup(str_):
+    return str(str_)[2:-1]
+
+def backup_all():
+    logger.info("Starting Backup")
+    logger.info("Creating Dump")
+    keys = list(map(cleanup, database.keys()))
+    dump = []
+    for key in keys:
+        dump.append(database.dump(key))
+    logger.info("Finished Dump")
+    logger.info("Writing To File")
+    try:
+        os.mkdir("backups")
+        logger.info("Created backups directory")
+    except FileExistsError:
+        logger.info("Backups directory exists")
+    with open("backups/dump.dump", 'wb') as f:
+        with open("backups/keys.txt", 'w') as k:
+            for i, item in enumerate(dump):
+                pickle.dump(item, f)
+                k.write(f"{keys[i]}\n")
+    logger.info("Backup Finished")
 
 # spellcheck - allows one letter off/extra
 # cutoff - allows for difference of that amount

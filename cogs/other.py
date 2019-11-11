@@ -14,15 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import random
 from difflib import get_close_matches
 
 import discord
 import wikipedia
 from discord.ext import commands
 
-from data.data import fossils_list, database, logger, bot_name
-from functions import channel_setup, send_fossil, user_setup, owner_check
+from data.data import bot_name, database, fossils_list, logger
+from functions import channel_setup, owner_check, send_fossil, user_setup
 
 class Other(commands.Cog):
     def __init__(self, bot):
@@ -37,7 +36,7 @@ class Other(commands.Cog):
         await channel_setup(ctx)
         await user_setup(ctx)
         
-        matches = get_close_matches(arg, fossils_list + fossils_list, n=1)
+        matches = get_close_matches(arg, fossils_list, n=1)
         if matches:
             fossil = matches[0]
             
