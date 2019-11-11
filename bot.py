@@ -28,9 +28,9 @@ import wikipedia
 from discord.ext import commands, tasks
 
 from data.data import database, logger, bot_name
-from functions import channel_setup, precache
+from functions import channel_setup, precache, backup_all
 
-BACKUPS_CHANNEL = 622547928946311188
+BACKUPS_CHANNEL = 643583771463122946
 
 if __name__ == '__main__':
     # Initialize bot
@@ -111,6 +111,10 @@ if __name__ == '__main__':
         elif isinstance(error, commands.ArgumentParsingError):
             logger.error("quote error")
             await ctx.send("An invalid character was detected. Please try again.")
+        
+        elif isinstance(error, commands.TooManyArguments):
+            logger.error("too many args")
+            await ctx.send("Too many arguments were provided. Please try again.")
         
         elif isinstance(error, commands.BotMissingPermissions):
             logger.error("missing permissions error")
@@ -194,3 +198,32 @@ if __name__ == '__main__':
     refresh_cache.start()
     token = os.getenv("token")
     bot.run(token)
+    
+    @tasks.loop(hours=6.0)
+    async def refresh_backup():
+        logger.info("Refreshing backup")
+        try:
+            os.remove('backups/dump.dump')
+            logger.info("Cleared backup dump")
+        except FileNotFoundError:
+            logger.info("Already cleared backup dump")
+        try:
+            os.remove('backups/keys.txt')
+            logger.info("Cleared backup keys")
+        except FileNotFoundError:
+            logger.info("Already cleared backup keys")
+        
+        event_loop = asyncio.get_event_loop()
+        with ThreadPoolExecutor(1) as executor:
+            await event_loop.run_in_executor(executor, start_backup)
+        
+        logger.info("Sending backup files")
+        channel = bot.get_channel(BACKUPS_CHANNEL)
+        with open("backups/dump.dump", 'rb') as f:
+            await channel.send(file=discord.File(f, filename="dump"))
+        with open("backups/keys.txt", 'r') as f:
+            await channel.send(file=discord.File(f, filename="keys.txt"))
+        logger.info("Backup Files Sent!")
+
+def start_backup():
+    asyncio.run(backup_all())

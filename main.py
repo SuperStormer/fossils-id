@@ -1,7 +1,9 @@
-from flask import Flask
-from threading import Thread
-import subprocess
 import os
+import subprocess
+from threading import Thread
+
+from flask import Flask
+
 app = Flask('')
 
 @app.route('/')
