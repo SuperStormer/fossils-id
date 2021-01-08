@@ -1,3 +1,6 @@
+# This is abandoned, use https://github.com/tctree333/Fossil-ID instead.
+
+
 # Fossil ID
 
 A discord bot for aspiring paleontologists. This bot is designed to help people practice the identification portion of the Science Olympiad Fossils event.
